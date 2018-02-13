@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+
+    db:
+        image: mysql:5.7
+        hostname: mysql
+        networks:
+                - zabbix
+        ports:
+                - 3306:3306/tcp
+        volumes:
+            - mysql_data:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: zabbix
+            MYSQL_USER: zabbix
+            MYSQL_PASSWORD: zabbix
+            MYSQL_ROOT_PASSWORD: root
+
+    zabbix-server:
+        image: zabbix/zabbix-server-mysql:latest
+        hostname: zabbix
+        networks:
+                - zabbix
+        ports:
+                - 10051:10051/tcp
+        environment:
+                MYSQL_DATABASE: zabbix
+                MYSQL_USER: zabbix
+                MYSQL_PASSWORD: zabbix
+                MYSQL_ROOT_PASSWORD: root
+                DB_SERVER_HOST: db                
+    zabbix-nginx:
+            image: zabbix/zabbix-web-nginx-mysql:latest
+            hostname: nginx
+            ports:
+                    - 80:80/tcp
+            networks:
+                    - zabbix
+            environment:
+                    DB_SERVER_HOST: db
+                    MYSQL_DATABASE: zabbix
+                    MYSQL_USER: zabbix
+                    MYSQL_PASSWORD: zabbix
+                    MYSQL_ROOT_PASSWORD: root
+                    ZBX_SERVER_HOST: zabbix-server
+            logging:
+                    driver: json-file
+                    options:
+                            max-file: '3'
+                            max-size: 100m
+volumes:
+        mysql_data:
+networks:
+        zabbix:
